@@ -1,0 +1,6 @@
+/dump/
+/venv/
+/__pycache__/
+/.idea/
+/build/
+/dist/
