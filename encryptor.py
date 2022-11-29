@@ -154,11 +154,18 @@ class ImageEncryptor(Tk):
         :return: PIL.Image.Image - resized image
         """
         w, h = img.size
-        ratio = max(w, h) / min(w, h)
-        if ratio < 1.1:
-            return imgxor.resizer(img, 480)
+        max_pix = int()
+        max_dim = max(w,h)
+        min_dim = min(w,h)
+        ratio = max_dim / min_dim
+        if ratio < 1.1 :
+            max_pix = 480
         else:
-            return imgxor.resizer(img, 600)
+            if max_dim==h:
+                max_pix = 480
+            else:
+                max_pix = 600
+        return imgxor.resizer(img,max_pix)
 
     def open_image(self):
         """

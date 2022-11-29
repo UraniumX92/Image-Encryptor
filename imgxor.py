@@ -52,8 +52,17 @@ def encrypt_image(img:Image.Image,key:str="") -> Image.Image:
     key = utils.get_key(key)
     img = img.convert(mode="RGB") if img.mode != "RGB" else img
     width , height = img.size
+
     img_data = img_to_list(img)
     img_data = utils.split_and_flip(img_data)
+    i2 = list_to_img(img_list=img_data,height=height,width=width)
+    i2 = i2.rotate(90,expand=1)
+    rw,rh = i2.size
+    img_data = utils.split_and_flip(img_to_list(i2))
+    i2 = list_to_img(img_data,height=rh,width=rw)
+    i2 = i2.rotate(-90,expand=1)
+    img_data = img_to_list(i2)
+
     xored = xor_img_data(img_data,key)
     ximg = list_to_img(xored,height,width)
     return ximg
@@ -69,10 +78,17 @@ def decrypt_image(img:Image.Image,key:str) -> Image.Image:
     key = utils.get_key(key)
     img = img.convert(mode="RGB") if img.mode != "RGB" else img
     width, height = img.size
+
     img_data = img_to_list(img)
     xored = xor_img_data(img_data, key)
-    xored = utils.split_and_flip(xored)
-    ximg = list_to_img(xored, height, width)
+
+    i2 = list_to_img(xored,height=height,width=width)
+    i2 = i2.rotate(90,expand=1)
+    rw,rh = i2.size
+    data = utils.split_and_flip(img_to_list(i2))
+    i2 = list_to_img(data,height=rh,width=rw).rotate(-90,expand=1)
+    data = utils.split_and_flip(img_to_list(i2))
+    ximg = list_to_img(data, height, width)
     return ximg
 
 def resizer(img:Image.Image,max_size:int) -> Image.Image:
@@ -90,14 +106,29 @@ def resizer(img:Image.Image,max_size:int) -> Image.Image:
 
 if __name__ == '__main__':
     img = Image.open("./dump/car.png")
+    # img = img.rotate(90,expand=1)
+    # img.show()
+    # exit()
     # newimg = resizer(img,400)
     # newimg.show()
     # newimg.save("./dump/resized.png")
     # exit()
     ################################
+    # w,h = img.size
     # l = img_to_list(img)
     # l = utils.split_and_flip(l)
-    # i2 = list_to_img(l,img.height,img.width)
+    # i2 = list_to_img(l,height=h,width=w)
+    # i2 = i2.rotate(90,expand=1)
+    # rw,rh = i2.size
+    # l = utils.split_and_flip(img_to_list(i2))
+    # i2 = list_to_img(l,width=rw,height=rh)
+    # i2.show()
+    # i2.save("scramble.png")
+    #
+    # data = utils.split_and_flip(img_to_list(i2))
+    # i2 = list_to_img(data,rh,rw).rotate(-90,expand=1)
+    # data = utils.split_and_flip(img_to_list(i2))
+    # i2 = list_to_img(data,h,w)
     # i2.show()
     ################################
     s = utils.timenow()
@@ -106,11 +137,11 @@ if __name__ == '__main__':
     e = utils.timenow()
     print(e-s)
     img2.show(title="E")
-    img2.save("./dump/testing_e4.png")
+    img2.save("./dump/testing_e5.png")
     print('-----------------------------------')
     s = utils.timenow()
     img3 = decrypt_image(img2,ckey)
     e = utils.timenow()
     print(e-s)
     img3.show(title="D")
-    img3.save("./dump/testing_d4.png")
+    img3.save("./dump/testing_d5.png")
