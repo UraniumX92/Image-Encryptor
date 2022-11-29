@@ -19,23 +19,6 @@ def timenow():
     """
     return datetime.now().timestamp()
 
-def str_replace(st:str,index:int,char:str) -> str:
-    """
-    Takes a string and replaces the character present at index with given char
-    and returns the modified string.
-
-    :param st: str : string to be modified
-    :param index: int: index at which replacement is to be done
-    :param char: str : a character which should be replaced
-    :return: str : modified string
-    """
-    lstr = list(st)
-    lstr[index] = char
-    return "".join(lstr)
-
-def randint(a,b) -> int:
-    return random.randint(a,b)
-
 def random_KeyGen(keylen:int) -> list[int]:
     return random.sample(range(255),keylen)
 
@@ -76,30 +59,6 @@ def get_compact_key(strval:str) -> str:
     :return: str
     """
     return str(get_key(strval)).replace(" ","")
-
-def to_even(n):
-    """
-    Takes an int n, if n is odd integer then converts n to an even number and returns n, else returns n as it is.
-
-    :param n: int
-    :return: int : closest even number to n in range(0,255)
-    """
-    if n%2==0:
-        return n
-    else:
-        return n-1
-
-def to_odd(n):
-    """
-    Takes an int n, if n is even integer then converts n to an odd number and returns n. else returns n as it is.
-
-    :param n: int
-    :return: int : closest odd number to n in range(0,255)
-    """
-    if n%2!=0:
-        return n
-    else:
-        return n+1
 
 def circular_increment(value:int,limit:int):
     """

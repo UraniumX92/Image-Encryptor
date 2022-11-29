@@ -195,24 +195,6 @@ class ImageEncryptor(Tk):
                 self.simage_label.photo = tkimg
                 self.sp_var.set(file)
 
-    def popup(self,title:str,text:str):
-        """
-        Creates a new pop up TopLevel to display while long tasks are going on
-        :return:
-        """
-        top = Toplevel(master=self,background=BACKGROUND)
-        frame = Frame(master=top,background=BACKGROUND,height=30)
-        frame.pack(fill=BOTH)
-        top.iconbitmap(self._icon)
-        top.title(title)
-        top.geometry("400x100")
-        top.resizable(False,False)
-        Label(master=frame,background=BACKGROUND,foreground=WHITE,text=text).pack(fill=BOTH,anchor=W)
-        top.grab_set()
-        top.focus_set()
-        top.update_idletasks()
-        return top
-
     def encrypt_image(self):
         """
         Encrypts the selected image
@@ -332,5 +314,3 @@ class ImageEncryptor(Tk):
         if self.ekey['state'] == 'readonly':
             self.ekey.configure(state=NORMAL)
             self.ekey.delete(0,END)
-
-
