@@ -8,6 +8,8 @@ import utils
 
 BACKGROUND = "#191919"
 SECONDARY_BG = "#2d2d2d"
+SELECTION_COLOR = "#3a3a3a"
+SELECTION_BLACK = "black"
 WHITE = 'white'
 bullet_char = "\u2022"
 dfont = "Segoe UI"
@@ -47,7 +49,7 @@ class ImageEncryptor(Tk):
         self.simage_label = Label(master=self.leftFrame, text="Selected image will appear here", width=85, height=25, background=SECONDARY_BG, foreground=WHITE)
         self.simage_label.pack()
         self.spath = Entry(master=self.leftFrame,background=BACKGROUND,textvariable=self.sp_var,foreground=WHITE,font=(dfont,8),state='readonly',readonlybackground=BACKGROUND,width=90,
-                           selectbackground='black')
+                           selectbackground=SELECTION_COLOR,borderwidth=0,justify=CENTER)
         self.spath.pack(pady=2)
 
         self.rlabel = Label(master=self.rightFrame,text="Resultant Image",font=(dfont,14,'bold'),width=30,height=1,background=BACKGROUND,foreground=WHITE)
@@ -55,7 +57,7 @@ class ImageEncryptor(Tk):
         self.rimage_label = Label(master=self.rightFrame, text="Encrypted/Decrypted image will appear here", width=85, height=25, background=SECONDARY_BG, foreground=WHITE)
         self.rimage_label.pack()
         self.rpath = Entry(master=self.rightFrame, background=BACKGROUND,textvariable=self.rp_var, foreground=WHITE,font=(dfont, 8),state='readonly',readonlybackground=BACKGROUND,width=90,
-                           selectbackground='black')
+                           selectbackground=SELECTION_COLOR,borderwidth=0,justify=CENTER)
         self.rpath.pack(pady=2)
 
         # Bottom Frame and widgets
@@ -71,7 +73,7 @@ class ImageEncryptor(Tk):
         self.ekey_label = Label(master=self.bottomFrame,background=BACKGROUND,foreground=WHITE,text="Encryption key : ",font=(dfont,10,'bold'))
         self.ekey_label.grid(row=1,column=0,padx=5,pady=5)
         self.ekey = Entry(master=self.bottomFrame,background=SECONDARY_BG,disabledbackground=BACKGROUND,disabledforeground=WHITE,foreground=WHITE,width=80,insertbackground=WHITE,
-                          readonlybackground=BACKGROUND,selectbackground='black')
+                          readonlybackground=BACKGROUND,selectbackground=SELECTION_BLACK)
         self.ekey.grid(row=1,column=1,padx=5,pady=5,ipady=2)
 
         self.copy_key_btn = Button(master=self.bottomFrame, text="copy key to clipboard", background=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG)
@@ -82,6 +84,9 @@ class ImageEncryptor(Tk):
 
         self.dec_button = Button(master=self.bottomFrame, text="Decrypt image", background=SECONDARY_BG,foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG)
         self.dec_button.grid(row=2, column=1, padx=5, pady=5, sticky=E)
+
+        self.clr_fields_btn = Button(master=self.bottomFrame, text="Clear Fields", background=SECONDARY_BG,foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG)
+        self.clr_fields_btn.grid(row=3,column=0,pady=5,padx=5)
 
         self.save_button = Button(master=self.bottomFrame,text="Save resultant image",background=SECONDARY_BG,activebackground=SECONDARY_BG,foreground=WHITE,activeforeground=WHITE)
         self.save_button.grid(row=3,column=1,pady=5,padx=5,sticky=E)
@@ -98,6 +103,7 @@ class ImageEncryptor(Tk):
         self.rng_button['command'] = self.rng_key
         self.custom_key_btn['command'] = self.cstm_key
         self.copy_key_btn['command'] = self.copy_key
+        self.clr_fields_btn['command'] = lambda: self.clear_fields(ask=True)
 
 
     @property
@@ -116,24 +122,28 @@ class ImageEncryptor(Tk):
         self.sel_rimg_btn['text'] = self.sel_rimg_btn['text'].replace(self.recent_op,value)
         self._r_op = value
 
-    def clear_fields(self):
+    def clear_fields(self,ask=False):
         """
         Clears image labels and resets the text labels and entry widget and resets img variables to default
 
         :return: None
         """
-        self.simage_label.configure(image='',width=85,height=25)
-        self.simage_label.photo = None
-        self.rimage_label.configure(image='', width=85, height=25)
-        self.rimage_label.photo = None
-        self.slabel['text'] = "Selected Image"
-        self.rlabel['text'] = "Resultant Image"
-        self.recent_op = "resultant"
-        self.sp_var.set("")
-        self.rp_var.set("")
-        self.sel_img = None
-        self.res_img = None
-        self.ekey.delete(0, END)
+        if self.sel_img:
+            if ask:
+                ask = not msgbox.askyesno(title="Confirmation",message="Are you sure you want to clear all fields?")
+            if not ask:
+                self.simage_label.configure(image='',width=85,height=25)
+                self.simage_label.photo = None
+                self.rimage_label.configure(image='', width=85, height=25)
+                self.rimage_label.photo = None
+                self.slabel['text'] = "Selected Image"
+                self.rlabel['text'] = "Resultant Image"
+                self.recent_op = "resultant"
+                self.sp_var.set("")
+                self.rp_var.set("")
+                self.sel_img = None
+                self.res_img = None
+                self.ekey.delete(0, END)
 
     def img_resizer(self,img) -> Image.Image:
         """
