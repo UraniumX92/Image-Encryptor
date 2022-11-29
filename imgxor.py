@@ -12,15 +12,14 @@ def xor_img_data(img_arr:list, key:list) -> list:
     :return: list (encrypted rgb values)
     """
     size = len(img_arr)
-    e_list = []
     k_len = len(key)
     k_index = 0
     for i in range(size):
         num = img_arr[i]
         k_char = key[k_index]
-        e_list.append(num ^ k_char)
+        img_arr[i] = num ^ k_char
         k_index = utils.circular_increment(k_index,k_len)
-    return e_list
+    return img_arr
 
 def img_to_list(img:Image.Image) -> list:
     """
@@ -52,20 +51,9 @@ def encrypt_image(img:Image.Image,key:str="") -> Image.Image:
     key = utils.get_key(key)
     img = img.convert(mode="RGB") if img.mode != "RGB" else img
     width , height = img.size
-
-    img_data = img_to_list(img)
-    img_data = utils.split_and_flip(img_data)
-    i2 = list_to_img(img_list=img_data,height=height,width=width)
-    i2 = i2.rotate(90,expand=1)
-    rw,rh = i2.size
-    img_data = utils.split_and_flip(img_to_list(i2))
-    i2 = list_to_img(img_data,height=rh,width=rw)
-    i2 = i2.rotate(-90,expand=1)
-    img_data = img_to_list(i2)
-
+    img_data = img_to_list(scrambler(img))
     xored = xor_img_data(img_data,key)
-    ximg = list_to_img(xored,height,width)
-    return ximg
+    return list_to_img(xored,height,width)
 
 def decrypt_image(img:Image.Image,key:str) -> Image.Image:
     """
@@ -73,23 +61,16 @@ def decrypt_image(img:Image.Image,key:str) -> Image.Image:
 
     :param img: image to be decrypted
     :param key: encryption key
-    :return: decrypted image
+    :return: PIL.Image.Image - Decrypted image
     """
     key = utils.get_key(key)
     img = img.convert(mode="RGB") if img.mode != "RGB" else img
     width, height = img.size
-
     img_data = img_to_list(img)
     xored = xor_img_data(img_data, key)
-
-    i2 = list_to_img(xored,height=height,width=width)
-    i2 = i2.rotate(90,expand=1)
-    rw,rh = i2.size
-    data = utils.split_and_flip(img_to_list(i2))
-    i2 = list_to_img(data,height=rh,width=rw).rotate(-90,expand=1)
-    data = utils.split_and_flip(img_to_list(i2))
-    ximg = list_to_img(data, height, width)
-    return ximg
+    img2 = list_to_img(xored, height=height, width=width)
+    data = img_to_list(unscrambler(img2))
+    return list_to_img(data, height, width)
 
 def resizer(img:Image.Image,max_size:int) -> Image.Image:
     """
@@ -104,8 +85,45 @@ def resizer(img:Image.Image,max_size:int) -> Image.Image:
     new_size = int(multiplier*width),int(multiplier*height)
     return img.resize(new_size)
 
+def scrambler(img) -> Image.Image:
+    """
+    Takes an image and scrambles it and returns the scrambled image
+    (this function is inverse of unscrambler(img) function)
+    :param img:
+    :return: PIL.Image.Image
+    """
+    w,h = img.size
+    data = img_to_list(img)
+    data = utils.split_and_flip(data)
+    newimg = list_to_img(data, height=h, width=w)
+    newimg = newimg.rotate(90, expand=1)
+    data = utils.split_and_flip(img_to_list(newimg))
+    return list_to_img(data, width=h, height=w).rotate(-90,expand=1)
+
+def unscrambler(img) -> Image.Image:
+    """
+    Takes an image and performs inverse of scrambling algorithm
+    i.e unscrambles the scrambled image and returns it
+
+    (this function is inverse of scrambler(img) function)
+    :param img:
+    :return: PIL.Image.Image
+    """
+    w,h = img.size
+    img = img.rotate(90,expand=1)
+    data = utils.split_and_flip(img_to_list(img))
+    newimg = list_to_img(data, w, h).rotate(-90, expand=1)
+    data = utils.split_and_flip(img_to_list(newimg))
+    return list_to_img(data, h, w)
+
+
 if __name__ == '__main__':
     img = Image.open("./dump/car.png")
+    # sc = unscrambler(img)
+    # sc.show()
+    # scrambler(sc).show()
+    # exit()
+
     # img = img.rotate(90,expand=1)
     # img.show()
     # exit()
@@ -114,22 +132,9 @@ if __name__ == '__main__':
     # newimg.save("./dump/resized.png")
     # exit()
     ################################
-    # w,h = img.size
-    # l = img_to_list(img)
-    # l = utils.split_and_flip(l)
-    # i2 = list_to_img(l,height=h,width=w)
-    # i2 = i2.rotate(90,expand=1)
-    # rw,rh = i2.size
-    # l = utils.split_and_flip(img_to_list(i2))
-    # i2 = list_to_img(l,width=rw,height=rh)
     # i2.show()
     # i2.save("scramble.png")
-    #
-    # data = utils.split_and_flip(img_to_list(i2))
-    # i2 = list_to_img(data,rh,rw).rotate(-90,expand=1)
-    # data = utils.split_and_flip(img_to_list(i2))
-    # i2 = list_to_img(data,h,w)
-    # i2.show()
+        # newimg.show()
     ################################
     s = utils.timenow()
     ckey = str(utils.random_KeyGen(254))
