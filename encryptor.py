@@ -143,6 +143,7 @@ class ImageEncryptor(Tk):
                 self.rp_var.set("")
                 self.sel_img = None
                 self.res_img = None
+                self.ekey.configure(state=NORMAL)
                 self.ekey.delete(0, END)
 
     def img_resizer(self,img) -> Image.Image:
