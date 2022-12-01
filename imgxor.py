@@ -51,7 +51,7 @@ def encrypt_image(img:Image.Image,key:str="") -> Image.Image:
     key = utils.get_key(key)
     img = img.convert(mode="RGB") if img.mode != "RGB" else img
     width , height = img.size
-    img_data = img_to_list(scramble_unscramble(img))
+    img_data = img_to_list(scrambler(img))
     xored = xor_img_data(img_data,key)
     return list_to_img(xored,height,width)
 
@@ -69,7 +69,7 @@ def decrypt_image(img:Image.Image,key:str) -> Image.Image:
     img_data = img_to_list(img)
     xored = xor_img_data(img_data, key)
     img2 = list_to_img(xored, height=height, width=width)
-    data = img_to_list(scramble_unscramble(img2))
+    data = img_to_list(unscrambler(img2))
     return list_to_img(data, height, width)
 
 def resizer(img:Image.Image,max_size:int) -> Image.Image:
@@ -85,10 +85,10 @@ def resizer(img:Image.Image,max_size:int) -> Image.Image:
     new_size = int(multiplier*width),int(multiplier*height)
     return img.resize(new_size)
 
-def scramble_unscramble(img) -> Image.Image:
+def scrambler(img) -> Image.Image:
     """
-    Takes an image and scrambles/unscrambles it and returns the resultant image,
-    (this function is inverse of itself, i.e if you try to scramble same image 2 times, you will get original image as result)
+    Takes an image and scrambles it and returns the scrambled image
+    (this function is inverse of unscrambler(img) function)
     :param img:
     :return: PIL.Image.Image
     """
@@ -98,13 +98,26 @@ def scramble_unscramble(img) -> Image.Image:
     newimg = list_to_img(data, height=h, width=w)
     newimg = newimg.rotate(90, expand=1)
     data = utils.split_and_flip(img_to_list(newimg))
-    newimg = list_to_img(data, width=h, height=w)
-    newimg = newimg.rotate(-90,expand=1)
-    return newimg
+    return list_to_img(data, width=h, height=w).rotate(-90,expand=1)
+
+def unscrambler(img) -> Image.Image:
+    """
+    Takes an image and performs inverse of scrambling algorithm
+    i.e unscrambles the scrambled image and returns it
+    (this function is inverse of scrambler(img) function)
+    :param img:
+    :return: PIL.Image.Image
+    """
+    w,h = img.size
+    img = img.rotate(90,expand=1)
+    data = utils.split_and_flip(img_to_list(img))
+    newimg = list_to_img(data, w, h).rotate(-90, expand=1)
+    data = utils.split_and_flip(img_to_list(newimg))
+    return list_to_img(data, h, w)
 
 if __name__ == '__main__':
     img = Image.open("./dump/car.png")
-    # s1 = scramble_unscramble(img)
+    # s1 = scrambler(img)
     # s1.show()
     # s2 = scrambler(s1)
     # s2.show()
@@ -113,18 +126,6 @@ if __name__ == '__main__':
     # us2 = unscrambler(us1)
     # us2.show()
     # exit()
-
-    # img = img.rotate(90,expand=1)
-    # img.show()
-    # exit()
-    # newimg = resizer(img,400)
-    # newimg.show()
-    # newimg.save("./dump/resized.png")
-    # exit()
-    ################################
-    # i2.show()
-    # i2.save("scramble.png")
-        # newimg.show()
     ################################
     s = utils.timenow()
     ckey = str(utils.random_KeyGen(254))

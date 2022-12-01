@@ -95,10 +95,10 @@ def split_and_flip(array:list,level:int=2):
     return h1[::-1] + h2[::-1]
 
 if __name__ == '__main__':
-    arr = [x for x in range(40)]
+    arr = [x for x in range(38024)]
     old = split_and_flip(arr,0)
     new = split_and_flip(arr)
-    print(old)
-    print(new)
+    # print(old)
+    # print(new)
     reset = split_and_flip(new)
     print(sorted(new) == reset)
