@@ -159,12 +159,12 @@ class ImageEncryptor(Tk):
         min_dim = min(w,h)
         ratio = max_dim / min_dim
         if ratio < 1.1 :
-            max_pix = 480
+            max_pix = 450
         else:
             if max_dim==h:
-                max_pix = 480
+                max_pix = 450
             else:
-                max_pix = 600
+                max_pix = 580
         return imgxor.resizer(img,max_pix)
 
     def open_image(self):

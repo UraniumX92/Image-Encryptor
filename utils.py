@@ -20,7 +20,7 @@ def timenow():
     return datetime.now().timestamp()
 
 def random_KeyGen(keylen:int) -> list[int]:
-    return random.sample(range(255),keylen)
+    return random.sample(range(256),keylen,counts=[2 for x in range(256)])
 
 def dump_json(object, filename):
     with open(filename, "w") as dump:
@@ -29,6 +29,19 @@ def dump_json(object, filename):
 def load_json(filename):
     with open(filename, "r") as load:
         return json.load(load)
+
+def key_mod(key:int) -> int:
+    """
+    Modifies the given key before using it for encryption/decryption
+
+    :param key:
+    :return:
+    """
+    l = len(key)
+    for i in range(l):
+        # key[i] = int(split_and_flip(format(key[i],'08b')),2)
+        key[i] = int(format(key[i],'08b')[::-1],2)
+    return key
 
 def get_key(strval:str) -> list[int]:
     """
@@ -93,6 +106,29 @@ def split_and_flip(array:list,level:int=2):
         h1 = split_and_flip(h1,level-1)
         h2 = split_and_flip(h2,level-1)
     return h1[::-1] + h2[::-1]
+
+def change(key):
+    """
+    Temp function to use for testing.
+    this function changes each value of a given list of integers by +/- 1
+    :param key:
+    :return:
+    """
+    key = json.loads(key)
+    kl = len(key)
+    for i in range(kl):
+        value = key[i]
+        if value == 255:
+            key[i] = 254
+        elif value == 0:
+            key[i] = 1
+        else:
+            r = random.randint(0,10)
+            if r%2==0:
+                key[i] = value + 1
+            else:
+                key[i] = value -1
+    return key
 
 if __name__ == '__main__':
     arr = [x for x in range(38024)]
