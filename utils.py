@@ -39,7 +39,6 @@ def key_mod(key:int) -> int:
     """
     l = len(key)
     for i in range(l):
-        # key[i] = int(split_and_flip(format(key[i],'08b')),2)
         key[i] = int(format(key[i],'08b')[::-1],2)
     return key
 
@@ -61,6 +60,8 @@ def get_key(strval:str) -> list[int]:
             raise json.decoder.JSONDecodeError("not int","",0)
     except json.decoder.JSONDecodeError:
         k = [ord(x) for x in strval]
+    for i in range(len(k)):
+        k[i] = -k[i] if k[i]<0 else k[i]
     return k
 
 def get_compact_key(strval:str) -> str:

@@ -20,14 +20,15 @@ class ImageEncryptor(Tk):
         self.geometry(geometry)
         self._icon = icon
         self.iconbitmap(icon)
+        self.key_length = 254
         self.kill = self.destroy
         self.title("Image Encryptor - App by Syed Usama")
         self.resizable(False,False)
         self.configure(background=BACKGROUND)
 
         # Variables
-        self.sel_img = None
-        self.res_img = None
+        self._sel_img = None
+        self._res_img = None
         self._r_op = "resultant"
         self.sp_var = StringVar()
         self.rp_var = StringVar()
@@ -51,6 +52,8 @@ class ImageEncryptor(Tk):
         self.spath = Entry(master=self.leftFrame,background=BACKGROUND,textvariable=self.sp_var,foreground=WHITE,font=(dfont,8),state='readonly',readonlybackground=BACKGROUND,width=90,
                            selectbackground=SELECTION_COLOR,borderwidth=0,justify=CENTER)
         self.spath.pack(pady=2)
+        self.show_simg = Button(master=self.leftFrame, text="Show image", background=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG,state=DISABLED)
+        self.show_simg.pack(pady=2)
 
         self.rlabel = Label(master=self.rightFrame,text="Resultant Image",font=(dfont,14,'bold'),width=30,height=1,background=BACKGROUND,foreground=WHITE)
         self.rlabel.pack()
@@ -59,6 +62,8 @@ class ImageEncryptor(Tk):
         self.rpath = Entry(master=self.rightFrame, background=BACKGROUND,textvariable=self.rp_var, foreground=WHITE,font=(dfont, 8),state='readonly',readonlybackground=BACKGROUND,width=90,
                            selectbackground=SELECTION_COLOR,borderwidth=0,justify=CENTER)
         self.rpath.pack(pady=2)
+        self.show_rimg = Button(master=self.rightFrame,text="Show image", background=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG,state=DISABLED)
+        self.show_rimg.pack(pady=2)
 
         # Bottom Frame and widgets
         self.sel_image_button = Button(master=self.bottomFrame, text="Select image", background=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG)
@@ -104,11 +109,37 @@ class ImageEncryptor(Tk):
         self.custom_key_btn['command'] = self.cstm_key
         self.copy_key_btn['command'] = self.copy_key
         self.clr_fields_btn['command'] = lambda: self.clear_fields(ask=True)
+        self.show_simg['command'] = lambda : self.show_img(self.sel_img)
+        self.show_rimg['command'] = lambda : self.show_img(self.res_img)
 
 
     @property
     def recent_op(self):
         return self._r_op
+
+    @property
+    def sel_img(self):
+        return self._sel_img
+
+    @property
+    def res_img(self):
+        return self._res_img
+
+    @sel_img.setter
+    def sel_img(self,img):
+        self._sel_img = img
+        if img:
+            self.show_simg.configure(state=NORMAL)
+        else:
+            self.show_simg.configure(state=DISABLED)
+
+    @res_img.setter
+    def res_img(self,img):
+        self._res_img = img
+        if img:
+            self.show_rimg.configure(state=NORMAL)
+        else:
+            self.show_rimg.configure(state=DISABLED)
 
     @recent_op.setter
     def recent_op(self, value:str):
@@ -216,6 +247,7 @@ class ImageEncryptor(Tk):
             self.rimage_label.photo = tkimg
             self.recent_op = "encrypted"
             self.rlabel['text'] = f"Encrypted Image - ({w}x{h})"
+            self.rp_var.set("")
         else:
             return msgbox.showerror(title="Error",message="Please select an image first")
 
@@ -240,6 +272,7 @@ class ImageEncryptor(Tk):
             self.rimage_label.photo = tkimg
             self.recent_op = "decrypted"
             self.rlabel['text'] = f"Decrypted Image - ({w}x{h})"
+            self.rp_var.set("")
         else:
             return msgbox.showerror(title="Error",message="Please select an image first")
 
@@ -256,6 +289,7 @@ class ImageEncryptor(Tk):
 
         if msgbox.askyesno(title="Confirmation",message=f"Are you sure you want to select {self.recent_op} image for operations?"):
             self.sel_img = self.res_img
+            self.res_img = None
             w,h = self.sel_img.size
             resized = self.img_resizer(self.sel_img)
             tkimg = ImageTk.PhotoImage(resized)
@@ -303,8 +337,17 @@ class ImageEncryptor(Tk):
         """
         self.ekey.configure(state=NORMAL)
         self.ekey.delete(0,END)
-        self.ekey.insert(0,utils.get_compact_key(str(utils.random_KeyGen(254))))
+        random_key = utils.get_compact_key(str(utils.random_KeyGen(self.key_length)))
+        self.ekey.insert(0,random_key)
         self.ekey.configure(state='readonly')
+
+    def show_img(self,img:Image.Image):
+        """
+        Displays the image using Image.Image.show() method
+        :param img:
+        :return:
+        """
+        img.show()
 
     def cstm_key(self):
         """
