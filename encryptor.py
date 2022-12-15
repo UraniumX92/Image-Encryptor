@@ -319,13 +319,17 @@ class ImageEncryptor(Tk):
             self.simage_label.photo = tkimg
             self.rimage_label.configure(image='', width=85, height=25)
             self.rimage_label.photo = None
-            self.sp_var.set("")
-            self.rp_var.set("")
             self.slabel['text'] = f"Selected Image - ({w}x{h})"
             self.rlabel['text'] = f"Resultant Image"
             self.recent_op = "resultant"
-            self.res_img.save(self.temp_path1)
-            self.res_img = None
+            rpath = self.rp_var.get()
+            self.rp_var.set("")
+            if rpath:
+                self.sp_var.set(rpath)
+            else:
+                self.res_img.save(self.temp_path1)
+                self.sp_var.set("")
+                self.res_img = None
             if os.path.exists(self.temp_path2):
                 os.remove(self.temp_path2)
 
