@@ -1,10 +1,12 @@
 from tkinter import *
 from tkinter import messagebox as msgbox
 from tkinter import filedialog as fd
+from webbrowser import open as display_img
 import PIL
 from PIL import Image,ImageTk
 import imgxor
 import utils
+import os
 
 BACKGROUND = "#191919"
 SECONDARY_BG = "#2d2d2d"
@@ -21,7 +23,8 @@ class ImageEncryptor(Tk):
         self._icon = icon
         self.iconbitmap(icon)
         self.key_length = 254
-        self.kill = self.destroy
+        self.temp_path1 = os.path.join(os.getcwd(),"ImageEncryptor_tempfile_sel_img_preview.png")
+        self.temp_path2 = os.path.join(os.getcwd(),"ImageEncryptor_tempfile_res_img_preview.png")
         self.title("Image Encryptor - App by Syed Usama")
         self.resizable(False,False)
         self.configure(background=BACKGROUND)
@@ -52,8 +55,8 @@ class ImageEncryptor(Tk):
         self.spath = Entry(master=self.leftFrame,background=BACKGROUND,textvariable=self.sp_var,foreground=WHITE,font=(dfont,8),state='readonly',readonlybackground=BACKGROUND,width=90,
                            selectbackground=SELECTION_COLOR,borderwidth=0,justify=CENTER)
         self.spath.pack(pady=2)
-        self.show_simg = Button(master=self.leftFrame, text="Show image", background=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG,state=DISABLED)
-        self.show_simg.pack(pady=2)
+        self.show_simg_btn = Button(master=self.leftFrame, text="Show image", background=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG, state=DISABLED)
+        self.show_simg_btn.pack(pady=2)
 
         self.rlabel = Label(master=self.rightFrame,text="Resultant Image",font=(dfont,14,'bold'),width=30,height=1,background=BACKGROUND,foreground=WHITE)
         self.rlabel.pack()
@@ -62,8 +65,8 @@ class ImageEncryptor(Tk):
         self.rpath = Entry(master=self.rightFrame, background=BACKGROUND,textvariable=self.rp_var, foreground=WHITE,font=(dfont, 8),state='readonly',readonlybackground=BACKGROUND,width=90,
                            selectbackground=SELECTION_COLOR,borderwidth=0,justify=CENTER)
         self.rpath.pack(pady=2)
-        self.show_rimg = Button(master=self.rightFrame,text="Show image", background=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG,state=DISABLED)
-        self.show_rimg.pack(pady=2)
+        self.show_rimg_btn = Button(master=self.rightFrame, text="Show image", background=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG, state=DISABLED)
+        self.show_rimg_btn.pack(pady=2)
 
         # Bottom Frame and widgets
         self.sel_image_button = Button(master=self.bottomFrame, text="Select image", background=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG)
@@ -93,8 +96,11 @@ class ImageEncryptor(Tk):
         self.clr_fields_btn = Button(master=self.bottomFrame, text="Clear Fields", background=SECONDARY_BG,foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG)
         self.clr_fields_btn.grid(row=3,column=0,pady=5,padx=5)
 
-        self.save_button = Button(master=self.bottomFrame,text="Save resultant image",background=SECONDARY_BG,activebackground=SECONDARY_BG,foreground=WHITE,activeforeground=WHITE)
-        self.save_button.grid(row=3,column=1,pady=5,padx=5,sticky=E)
+        self.save_rbtn = Button(master=self.bottomFrame, text="Save resultant image", background=SECONDARY_BG, activebackground=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE)
+        self.save_rbtn.grid(row=3, column=1, pady=5, padx=5, sticky=E)
+
+        self.save_sbtn = Button(master=self.bottomFrame, text="Save selected image", background=SECONDARY_BG, activebackground=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE)
+        self.save_sbtn.grid(row=3,column=1,pady=5,padx=5,sticky=N)
 
         self.sel_rimg_btn = Button(master=self.bottomFrame, text="Select resultant image", background=SECONDARY_BG, activebackground=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE)
         self.sel_rimg_btn.grid(row=3, column=1, padx=5, pady=5, sticky=W)
@@ -103,14 +109,22 @@ class ImageEncryptor(Tk):
         self.sel_image_button['command'] = self.open_image
         self.enc_button['command'] = self.encrypt_image
         self.dec_button['command'] = self.decrypt_image
-        self.save_button['command'] = self.save_img
+        self.save_rbtn['command'] = self.save_rimg
+        self.save_sbtn['command'] = self.save_simg
         self.sel_rimg_btn['command'] = self.sel_res_img
         self.rng_button['command'] = self.rng_key
         self.custom_key_btn['command'] = self.cstm_key
         self.copy_key_btn['command'] = self.copy_key
         self.clr_fields_btn['command'] = lambda: self.clear_fields(ask=True)
-        self.show_simg['command'] = lambda : self.show_img(self.sel_img)
-        self.show_rimg['command'] = lambda : self.show_img(self.res_img)
+        self.show_simg_btn['command'] = self.show_simg
+        self.show_rimg_btn['command'] = self.show_rimg
+
+        # misc
+        self.sel_img = None
+        self.res_img = None
+
+        # destruction protocol
+        self.protocol("WM_DELETE_WINDOW", self.exit_protocol)
 
 
     @property
@@ -128,18 +142,28 @@ class ImageEncryptor(Tk):
     @sel_img.setter
     def sel_img(self,img):
         self._sel_img = img
-        if img:
-            self.show_simg.configure(state=NORMAL)
+        if isinstance(img,Image.Image):
+            self.show_simg_btn.configure(state=NORMAL)
+            self.enc_button.configure(state=NORMAL)
+            self.dec_button.configure(state=NORMAL)
+            self.save_sbtn.configure(state=NORMAL)
         else:
-            self.show_simg.configure(state=DISABLED)
+            self.show_simg_btn.configure(state=DISABLED)
+            self.enc_button.configure(state=DISABLED)
+            self.dec_button.configure(state=DISABLED)
+            self.save_sbtn.configure(state=DISABLED)
 
     @res_img.setter
     def res_img(self,img):
         self._res_img = img
-        if img:
-            self.show_rimg.configure(state=NORMAL)
+        if isinstance(img,Image.Image):
+            self.show_rimg_btn.configure(state=NORMAL)
+            self.sel_rimg_btn.configure(state=NORMAL)
+            self.save_rbtn.configure(state=NORMAL)
         else:
-            self.show_rimg.configure(state=DISABLED)
+            self.show_rimg_btn.configure(state=DISABLED)
+            self.sel_rimg_btn.configure(state=DISABLED)
+            self.save_rbtn.configure(state=DISABLED)
 
     @recent_op.setter
     def recent_op(self, value:str):
@@ -149,7 +173,7 @@ class ImageEncryptor(Tk):
         :return: str : recent operation performed
         """
         value = value.lower()
-        self.save_button['text'] = self.save_button['text'].replace(self.recent_op,value)
+        self.save_rbtn['text'] = self.save_rbtn['text'].replace(self.recent_op, value)
         self.sel_rimg_btn['text'] = self.sel_rimg_btn['text'].replace(self.recent_op,value)
         self._r_op = value
 
@@ -159,23 +183,26 @@ class ImageEncryptor(Tk):
 
         :return: None
         """
-        if self.sel_img:
-            if ask:
-                ask = not msgbox.askyesno(title="Confirmation",message="Are you sure you want to clear all fields?")
-            if not ask:
-                self.simage_label.configure(image='',width=85,height=25)
-                self.simage_label.photo = None
-                self.rimage_label.configure(image='', width=85, height=25)
-                self.rimage_label.photo = None
-                self.slabel['text'] = "Selected Image"
-                self.rlabel['text'] = "Resultant Image"
-                self.recent_op = "resultant"
-                self.sp_var.set("")
-                self.rp_var.set("")
-                self.sel_img = None
-                self.res_img = None
-                self.ekey.configure(state=NORMAL)
-                self.ekey.delete(0, END)
+        if ask:
+            ask = not msgbox.askyesno(title="Confirmation",message="Are you sure you want to clear all fields?")
+        if not ask:
+            self.simage_label.configure(image='',width=85,height=25)
+            self.simage_label.photo = None
+            self.rimage_label.configure(image='', width=85, height=25)
+            self.rimage_label.photo = None
+            self.slabel['text'] = "Selected Image"
+            self.rlabel['text'] = "Resultant Image"
+            self.recent_op = "resultant"
+            self.sp_var.set("")
+            self.rp_var.set("")
+            self.sel_img = None
+            self.res_img = None
+            self.ekey.configure(state=NORMAL)
+            self.ekey.delete(0, END)
+            if os.path.exists(self.temp_path1):
+                os.remove(self.temp_path1)
+            if os.path.exists(self.temp_path2):
+                os.remove(self.temp_path2)
 
     def img_resizer(self,img) -> Image.Image:
         """
@@ -232,24 +259,22 @@ class ImageEncryptor(Tk):
 
         :return:
         """
-        if self.sel_img:
-            key = self.ekey.get()
-            if not key:
-                return msgbox.showinfo(title="Info",message="Key cannot be empty, please enter the key")
-            self.rlabel['text'] = "Please wait..."
-            self.update_idletasks()
-            eimg = imgxor.encrypt_image(self.sel_img,key)
-            w,h = eimg.size
-            self.res_img = eimg
-            resized = self.img_resizer(eimg)
-            tkimg = ImageTk.PhotoImage(resized)
-            self.rimage_label.configure(image=tkimg,width=resized.width,height=resized.height)
-            self.rimage_label.photo = tkimg
-            self.recent_op = "encrypted"
-            self.rlabel['text'] = f"Encrypted Image - ({w}x{h})"
-            self.rp_var.set("")
-        else:
-            return msgbox.showerror(title="Error",message="Please select an image first")
+        key = self.ekey.get()
+        if not key:
+            return msgbox.showinfo(title="Info",message="Key cannot be empty, please enter the key")
+        self.rlabel['text'] = "Please wait..."
+        self.update_idletasks()
+        eimg = imgxor.encrypt_image(self.sel_img,key)
+        w,h = eimg.size
+        self.res_img = eimg
+        resized = self.img_resizer(eimg)
+        tkimg = ImageTk.PhotoImage(resized)
+        self.rimage_label.configure(image=tkimg,width=resized.width,height=resized.height)
+        self.rimage_label.photo = tkimg
+        self.recent_op = "encrypted"
+        self.rlabel['text'] = f"Encrypted Image - ({w}x{h})"
+        self.rp_var.set("")
+        self.res_img.save(self.temp_path2)
 
     def decrypt_image(self):
         """
@@ -257,24 +282,22 @@ class ImageEncryptor(Tk):
 
         :return:
         """
-        if self.sel_img:
-            key = self.ekey.get()
-            if not key:
-                return msgbox.showinfo(title="Info", message="Key cannot be empty, please enter the key")
-            self.rlabel['text'] = "Please wait..."
-            self.update_idletasks()
-            dec_img = imgxor.decrypt_image(self.sel_img,key)
-            w,h = dec_img.size
-            self.res_img = dec_img
-            resized = self.img_resizer(dec_img)
-            tkimg = ImageTk.PhotoImage(resized)
-            self.rimage_label.configure(image=tkimg,width=resized.width,height=resized.height)
-            self.rimage_label.photo = tkimg
-            self.recent_op = "decrypted"
-            self.rlabel['text'] = f"Decrypted Image - ({w}x{h})"
-            self.rp_var.set("")
-        else:
-            return msgbox.showerror(title="Error",message="Please select an image first")
+        key = self.ekey.get()
+        if not key:
+            return msgbox.showinfo(title="Info", message="Key cannot be empty, please enter the key")
+        self.rlabel['text'] = "Please wait..."
+        self.update_idletasks()
+        dec_img = imgxor.decrypt_image(self.sel_img,key)
+        w,h = dec_img.size
+        self.res_img = dec_img
+        resized = self.img_resizer(dec_img)
+        tkimg = ImageTk.PhotoImage(resized)
+        self.rimage_label.configure(image=tkimg,width=resized.width,height=resized.height)
+        self.rimage_label.photo = tkimg
+        self.recent_op = "decrypted"
+        self.rlabel['text'] = f"Decrypted Image - ({w}x{h})"
+        self.rp_var.set("")
+        self.res_img.save(self.temp_path2)
 
     def sel_res_img(self):
         """
@@ -289,7 +312,6 @@ class ImageEncryptor(Tk):
 
         if msgbox.askyesno(title="Confirmation",message=f"Are you sure you want to select {self.recent_op} image for operations?"):
             self.sel_img = self.res_img
-            self.res_img = None
             w,h = self.sel_img.size
             resized = self.img_resizer(self.sel_img)
             tkimg = ImageTk.PhotoImage(resized)
@@ -302,27 +324,50 @@ class ImageEncryptor(Tk):
             self.slabel['text'] = f"Selected Image - ({w}x{h})"
             self.rlabel['text'] = f"Resultant Image"
             self.recent_op = "resultant"
+            self.res_img.save(self.temp_path1)
+            self.res_img = None
+            if os.path.exists(self.temp_path2):
+                os.remove(self.temp_path2)
 
-
-    def save_img(self):
+    def save_rimg(self):
         """
         Saves the resultant image file
+
         :return:
         """
-        if self.res_img:
+        file = fd.asksaveasfilename()
+        if file:
+            name_list = file.split(".")
+            name_list.append('png') if name_list[-1] != 'png' else None
+            file = ".".join(name_list)
+            self.res_img.save(file)
+            self.rp_var.set(file)
+            if os.path.exists(self.temp_path2):
+                os.remove(self.temp_path2)
+
+    def save_simg(self):
+        """
+        Saves the selected image file
+
+        :return:
+        """
+        if self.sp_var.get():
+            return msgbox.showinfo(title="Info",message=f"Selected image is already saved at {self.sp_var.get()}")
+        else:
             file = fd.asksaveasfilename()
             if file:
                 name_list = file.split(".")
                 name_list.append('png') if name_list[-1] != 'png' else None
                 file = ".".join(name_list)
-                self.res_img.save(file)
-                self.rp_var.set(file)
-        else:
-            return msgbox.showerror(title="Error",message="Nothing to be saved, select a file and encrypt/decrypt to save the resultant image file")
+                self.sel_img.save(file)
+                self.sp_var.set(file)
+                if os.path.exists(self.temp_path1):
+                    os.remove(self.temp_path1)
 
     def copy_key(self):
         """
         Copies key to the clipboard
+
         :return:
         """
         key = self.ekey.get()
@@ -333,6 +378,7 @@ class ImageEncryptor(Tk):
     def rng_key(self):
         """
         sets randomly generated key as value in key entry and disables it
+
         :return:
         """
         self.ekey.configure(state=NORMAL)
@@ -341,19 +387,49 @@ class ImageEncryptor(Tk):
         self.ekey.insert(0,random_key)
         self.ekey.configure(state='readonly')
 
-    def show_img(self,img:Image.Image):
+    def show_simg(self):
         """
-        Displays the image using Image.Image.show() method
-        :param img:
+        Displays the selected image using webbrowser.open() method. which internally uses the default image viewer to open the image
+
         :return:
         """
-        img.show()
+        if self.sel_img:
+            path = self.sp_var.get()
+            if path:
+                pass
+            else:
+                path = self.temp_path1
+            display_img(path)
+
+    def show_rimg(self):
+        """
+        Displays the resultant image using webbrowser.open() method. which internally uses the default image viewer to open the image
+
+        :return:
+        """
+        if self.res_img:
+            path = self.rp_var.get()
+            if path:
+                pass
+            else:
+                path = self.temp_path2
+            display_img(path)
 
     def cstm_key(self):
         """
         enables key entry and clears the field
+
         :return:
         """
         if self.ekey['state'] == 'readonly':
             self.ekey.configure(state=NORMAL)
             self.ekey.delete(0,END)
+
+    def exit_protocol(self):
+        """
+        Protocol function to run before closing the app
+
+        :return: None
+        """
+        self.clear_fields()
+        self.destroy()
