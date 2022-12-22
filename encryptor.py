@@ -179,7 +179,9 @@ class ImageEncryptor(Tk):
 
     def clear_fields(self,ask=False):
         """
-        Clears image labels and resets the text labels and entry widget and resets img variables to default
+        Clears image labels and resets the text labels and entry widget and resets img variables to default,
+
+        and deletes the temp images which are located at self.temp_path1 and self.temp_path2
 
         :return: None
         """
@@ -232,7 +234,7 @@ class ImageEncryptor(Tk):
         """
         if self.res_img:
             if msgbox.askyesno(title="Warning",message="Are you sure you want to clear the fields and select new image?"):
-                self.clear_fields()
+                pass
             else:
                 return
 
@@ -240,6 +242,8 @@ class ImageEncryptor(Tk):
         if file:
             try:
                 img = Image.open(file)
+                # if image is opened successfully, only then we clear fields
+                self.clear_fields()
                 img = img.convert(mode="RGB") if img.mode != "RGB" else img
             except PIL.UnidentifiedImageError:
                 return msgbox.showerror(title="Error", message="Selected file is not an image file.")
@@ -397,12 +401,12 @@ class ImageEncryptor(Tk):
 
         :return:
         """
+        path = self.temp_path1
         if self.sel_img:
-            path = self.sp_var.get()
-            if path:
+            if os.path.exists(path):
                 pass
             else:
-                path = self.temp_path1
+                self.sel_img.save(path)
             display_img(path)
 
     def show_rimg(self):
@@ -411,12 +415,12 @@ class ImageEncryptor(Tk):
 
         :return:
         """
-        if self.res_img:
-            path = self.rp_var.get()
-            if path:
+        path = self.temp_path2
+        if self.sel_img:
+            if os.path.exists(path):
                 pass
             else:
-                path = self.temp_path2
+                self.sel_img.save(path)
             display_img(path)
 
     def cstm_key(self):
