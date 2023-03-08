@@ -62,6 +62,7 @@ def get_key(strval:str) -> list[int]:
         k = [ord(x) for x in strval]
     for i in range(len(k)):
         k[i] = -k[i] if k[i]<0 else k[i]
+        k[i] = k[i]%256
     return k
 
 def get_compact_key(strval:str) -> str:
@@ -86,26 +87,27 @@ def circular_increment(value:int,limit:int):
         value = 0
     return value
 
-def split_and_flip(array:list,level:int=2):
+def split_and_flip(array:list):
     """
     divides the list into 2 halves and flips each half, joins the flipped halves and returns single list
-    does the same thing with each half recursively for total of 3 times if the list contains even number of items, otherwise only 1 time.
+    does the same thing with each half recursively if the list contains even number of items, otherwise only 1 time.
     because array with odd number items cannot be split and obtained back in original form. where as arary with even number items
-    can be split for total of 3 times recursively and also able to obtain original form of array.
+    can be split recursively and can be obtained as original form of array.
 
     :param array: list
     :return: list - modified
     """
-    if len(array)%2!=0:
-        level = 0
-    elif level>2:
-        level = 2
-  
-    h1 = array[:len(array) // 2]
-    h2 = array[len(array) // 2:]
-    if level>0:
-        h1 = split_and_flip(h1,level-1)
-        h2 = split_and_flip(h2,level-1)
+    halfsize_int = len(array) // 2
+    h1 = array[:halfsize_int]
+    h2 = array[halfsize_int:]
+    s1 = len(h1)
+    s2 = len(h2)
+    # first half
+    if s1%2==0:
+        h1 = split_and_flip(h1)
+    # second half
+    if s2%2==0:
+        h2 = split_and_flip(h2)
     return h1[::-1] + h2[::-1]
 
 def change(key):
