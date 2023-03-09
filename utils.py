@@ -37,10 +37,7 @@ def key_mod(key:int) -> int:
     :param key:
     :return:
     """
-    l = len(key)
-    for i in range(l):
-        key[i] = int(format(key[i],'08b')[::-1],2)
-    return key
+    return [int(format(x,'08b')[::-1],2) for x in key]
 
 def get_key(strval:str) -> list[int]:
     """
@@ -59,10 +56,7 @@ def get_key(strval:str) -> list[int]:
         elif any(type(x) != type(int()) for x in k):
             raise json.decoder.JSONDecodeError("not int","",0)
     except json.decoder.JSONDecodeError:
-        k = [ord(x) for x in strval]
-    for i in range(len(k)):
-        k[i] = -k[i] if k[i]<0 else k[i]
-        k[i] = k[i]%256
+        k = [abs(ord(x))%256 for x in strval]
     return k
 
 def get_compact_key(strval:str) -> str:
@@ -97,11 +91,12 @@ def split_and_flip(array:list):
     :param array: list
     :return: list - modified
     """
-    halfsize_int = len(array) // 2
+    size = len(array)
+    halfsize_int = size // 2
     h1 = array[:halfsize_int]
     h2 = array[halfsize_int:]
-    s1 = len(h1)
-    s2 = len(h2)
+    s1 = halfsize_int
+    s2 = size - halfsize_int
     # first half
     if s1%2==0:
         h1 = split_and_flip(h1)

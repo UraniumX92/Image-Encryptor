@@ -14,12 +14,10 @@ def xor_img_data(img_arr:list, key:list) -> list:
     size = len(img_arr)
     k_len = len(key)
     key = utils.key_mod(key)
-    k_index = 0
+    # Repeating key to match the size of the img_array list. this method is faster than previous method
+    key = (key*((size//len(key))+1))[:size]
     for i in range(size):
-        num = img_arr[i]
-        k_char = key[k_index]
-        img_arr[i] = num ^ k_char
-        k_index = utils.circular_increment(k_index,k_len)
+        img_arr[i] = img_arr[i] ^ key[i]
     return img_arr
 
 def img_to_list(img:Image.Image) -> list:
@@ -29,9 +27,7 @@ def img_to_list(img:Image.Image) -> list:
     :param img: PIL.Image.Image
     :return: list
     """
-    data = list(img.getdata())
-    flat = list(chain.from_iterable(data))
-    return flat
+    return list(chain.from_iterable(img.getdata()))
 
 def list_to_img(img_list:list,height:int,width:int) -> Image.Image:
     """
