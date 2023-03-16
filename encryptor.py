@@ -22,9 +22,9 @@ class ImageEncryptor(Tk):
         self.geometry(geometry)
         self._icon = icon
         self.iconbitmap(icon)
-        self.key_length = 254
-        self.temp_path1 = os.path.join(os.getcwd(),"ImageEncryptor_tempfile_sel_img_preview.png")
-        self.temp_path2 = os.path.join(os.getcwd(),"ImageEncryptor_tempfile_res_img_preview.png")
+        self.key_length = 30
+        self.selimg_temp_path = os.path.join(os.getcwd(), "ImageEncryptor_tempfile_sel_img_preview.png")
+        self.resimg_temp_path = os.path.join(os.getcwd(), "ImageEncryptor_tempfile_res_img_preview.png")
         self.title("Image Encryptor - App by Syed Usama")
         self.resizable(False,False)
         self.configure(background=BACKGROUND)
@@ -80,9 +80,12 @@ class ImageEncryptor(Tk):
 
         self.ekey_label = Label(master=self.bottomFrame,background=BACKGROUND,foreground=WHITE,text="Encryption key : ",font=(dfont,10,'bold'))
         self.ekey_label.grid(row=1,column=0,padx=5,pady=5)
-        self.ekey = Entry(master=self.bottomFrame,background=SECONDARY_BG,disabledbackground=BACKGROUND,disabledforeground=WHITE,foreground=WHITE,width=80,insertbackground=WHITE,
+        self.ekey = Entry(master=self.bottomFrame,background=SECONDARY_BG,show=utils.bullet_char,disabledbackground=BACKGROUND,disabledforeground=WHITE,foreground=WHITE,width=80,insertbackground=WHITE,
                           readonlybackground=BACKGROUND,selectbackground=SELECTION_BLACK)
         self.ekey.grid(row=1,column=1,padx=5,pady=5,ipady=2)
+
+        self.show_hide_btn = Button(master=self.bottomFrame, text="Show", background=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG)
+        self.show_hide_btn.grid(row=1,column=2,padx=5,pady=5)
 
         self.copy_key_btn = Button(master=self.bottomFrame, text="copy key to clipboard", background=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG)
         self.copy_key_btn.grid(row=2,column=0,padx=5,pady=5)
@@ -112,6 +115,7 @@ class ImageEncryptor(Tk):
         self.save_rbtn['command'] = self.save_rimg
         self.save_sbtn['command'] = self.save_simg
         self.sel_rimg_btn['command'] = self.sel_res_img
+        self.show_hide_btn['command'] = self.show_hide
         self.rng_button['command'] = self.rng_key
         self.custom_key_btn['command'] = self.cstm_key
         self.copy_key_btn['command'] = self.copy_key
@@ -201,10 +205,10 @@ class ImageEncryptor(Tk):
             self.res_img = None
             self.ekey.configure(state=NORMAL)
             self.ekey.delete(0, END)
-            if os.path.exists(self.temp_path1):
-                os.remove(self.temp_path1)
-            if os.path.exists(self.temp_path2):
-                os.remove(self.temp_path2)
+            if os.path.exists(self.selimg_temp_path):
+                os.remove(self.selimg_temp_path)
+            if os.path.exists(self.resimg_temp_path):
+                os.remove(self.resimg_temp_path)
 
     def img_resizer(self,img) -> Image.Image:
         """
@@ -278,7 +282,7 @@ class ImageEncryptor(Tk):
         self.recent_op = "encrypted"
         self.rlabel['text'] = f"Encrypted Image - ({w}x{h})"
         self.rp_var.set("")
-        self.res_img.save(self.temp_path2)
+        self.res_img.save(self.resimg_temp_path)
 
     def decrypt_image(self):
         """
@@ -301,7 +305,7 @@ class ImageEncryptor(Tk):
         self.recent_op = "decrypted"
         self.rlabel['text'] = f"Decrypted Image - ({w}x{h})"
         self.rp_var.set("")
-        self.res_img.save(self.temp_path2)
+        self.res_img.save(self.resimg_temp_path)
 
     def sel_res_img(self):
         """
@@ -331,11 +335,11 @@ class ImageEncryptor(Tk):
             if rpath:
                 self.sp_var.set(rpath)
             else:
-                self.res_img.save(self.temp_path1)
+                self.res_img.save(self.selimg_temp_path)
                 self.sp_var.set("")
                 self.res_img = None
-            if os.path.exists(self.temp_path2):
-                os.remove(self.temp_path2)
+            if os.path.exists(self.resimg_temp_path):
+                os.remove(self.resimg_temp_path)
 
     def save_rimg(self):
         """
@@ -350,8 +354,8 @@ class ImageEncryptor(Tk):
             file = ".".join(name_list)
             self.res_img.save(file)
             self.rp_var.set(file)
-            if os.path.exists(self.temp_path2):
-                os.remove(self.temp_path2)
+            if os.path.exists(self.resimg_temp_path):
+                os.remove(self.resimg_temp_path)
 
     def save_simg(self):
         """
@@ -369,8 +373,8 @@ class ImageEncryptor(Tk):
                 file = ".".join(name_list)
                 self.sel_img.save(file)
                 self.sp_var.set(file)
-                if os.path.exists(self.temp_path1):
-                    os.remove(self.temp_path1)
+                if os.path.exists(self.selimg_temp_path):
+                    os.remove(self.selimg_temp_path)
 
     def copy_key(self):
         """
@@ -401,7 +405,7 @@ class ImageEncryptor(Tk):
 
         :return:
         """
-        path = self.temp_path1
+        path = self.selimg_temp_path
         if self.sel_img:
             if os.path.exists(path):
                 pass
@@ -415,13 +419,27 @@ class ImageEncryptor(Tk):
 
         :return:
         """
-        path = self.temp_path2
+        path = self.resimg_temp_path
         if self.sel_img:
             if os.path.exists(path):
                 pass
             else:
                 self.sel_img.save(path)
             display_img(path)
+
+    def show_hide(self):
+        """
+        Command for button which is used to show/hide the key entry text
+        :return:
+        """
+        if self.show_hide_btn['text'] == "Show":
+            self.ekey.config(show="")
+            self.ekey.update()
+            self.show_hide_btn['text'] = "Hide"
+        else:
+            self.ekey.config(show=utils.bullet_char)
+            self.ekey.update()
+            self.show_hide_btn['text'] = "Show"
 
     def cstm_key(self):
         """

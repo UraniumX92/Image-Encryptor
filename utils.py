@@ -1,6 +1,6 @@
 from datetime import datetime
+from functools import reduce
 import random
-import math
 import json
 
 bullet_char = "\u2022"
@@ -69,19 +69,7 @@ def get_compact_key(strval:str) -> str:
     """
     return str(get_key(strval)).replace(" ","")
 
-def circular_increment(value:int,limit:int):
-    """
-    Does a circular increment to the given number and returns the incremented number.
-    :param value: int
-    :param limit: int
-    :return: int - circularly incremented value
-    """
-    value += 1
-    if value>=limit:
-        value = 0
-    return value
-
-def split_and_flip(array:list):
+def split_and_flip(array:list,proceed=True) -> list:
     """
     divides the list into 2 halves and flips each half, joins the flipped halves and returns single list
     does the same thing with each half recursively if the list contains even number of items, otherwise only 1 time.
@@ -104,6 +92,35 @@ def split_and_flip(array:list):
     if s2%2==0:
         h2 = split_and_flip(h2)
     return h1[::-1] + h2[::-1]
+
+def get_seed(array:list):
+    """
+    Obtains the seed from given list and returns it.
+
+    :param array : a list from which seed is to be obtained
+    :return: float - seed obtained from the key
+    """
+    def seed_func(a,b):
+        """
+        function to pass in reduce() to get the seed
+        """
+        a1 = int(a)
+        b1 = int(b)
+        if is_even(a1) and is_even(b1):
+            return a+b
+        elif is_even(a1) and is_odd(b1):
+            return (2*b)-a
+        elif is_odd(a1) and is_even(b1):
+            return (b+a)/a
+        else: # odd , odd
+            return (a*b)-((b*a)/a)
+    return float(reduce(seed_func,array))
+
+def is_even(n):
+    return n%2==0
+
+def is_odd(n):
+    return n%2!=0
 
 def change(key):
     """
@@ -128,11 +145,64 @@ def change(key):
                 key[i] = value -1
     return key
 
+def scramble(data, seed):
+    """
+    Scrambles the data, using a seed and returns it.
+
+    :param data: data to be scrambled
+    :param seed: seed to be used for rng
+    :return: modified data
+    """
+    scrambled = data[:]
+    random.seed(seed)
+    random.shuffle(scrambled)
+    # resetting the seed (to avoid problems using random elsewhere)
+    random.seed()
+    return scrambled
+
+def unscramble(scrambled, seed):
+    """
+    Unscrambles the scrambled data using a seed and returns it.
+
+    :param scrambled: scrambled data
+    :param seed: seed to be used for rng
+    :return: modified data
+    """
+    index = list(range(len(scrambled)))
+    # Scramble this list using the same seed
+    index_scrambled = scramble(index, seed)
+    # Zip the scrambled data and index together
+    unscrambled = list(zip(scrambled, index_scrambled))
+    # Sort the pairs to unscramble them,
+    sorted_zip = sorted(unscrambled,key=lambda x:x[1])
+    # return a list of just the data values
+    return [x for x, y in sorted_zip]
+
+
 if __name__ == '__main__':
-    arr = [x for x in range(38024)]
-    old = split_and_flip(arr,0)
-    new = split_and_flip(arr)
-    # print(old)
-    # print(new)
-    reset = split_and_flip(new)
-    print(sorted(new) == reset)
+    key = random_KeyGen(30)
+    print(key)
+    seed = get_seed(key)
+    seed2 = get_seed(key[::-1])
+    seed3 = get_seed(change(str(key)))
+    print(seed)
+    print(seed2)
+    print(seed3)
+    exit()
+
+    # data = [x for x in range(215)]
+    # print(data)
+    # shuf = scramble(data, seed)
+    # print(shuf)
+    # unshuf = unscramble(shuf, seed2)
+    # print(unshuf)
+    # print(unshuf==data)
+    # exit()
+    # ------------------------------
+    # arr = [x for x in range(38024)]
+    # old = split_and_flip(arr,0)
+    # new = split_and_flip(arr)
+    # # print(old)
+    # # print(new)
+    # reset = split_and_flip(new)
+    # print(sorted(new) == reset)

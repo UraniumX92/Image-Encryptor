@@ -48,7 +48,7 @@ def encrypt_image(img:Image.Image,key:str="") -> Image.Image:
     key = utils.get_key(key)
     img = img.convert(mode="RGB") if img.mode != "RGB" else img
     width , height = img.size
-    img_data = img_to_list(scrambler(img))
+    img_data = img_to_list(scrambler(img,key))
     xored = xor_img_data(img_data,key)
     return list_to_img(xored,height,width)
 
@@ -66,7 +66,7 @@ def decrypt_image(img:Image.Image,key:str) -> Image.Image:
     img_data = img_to_list(img)
     xored = xor_img_data(img_data, key)
     img2 = list_to_img(xored, height=height, width=width)
-    data = img_to_list(unscrambler(img2))
+    data = img_to_list(unscrambler(img2,key))
     return list_to_img(data, height, width)
 
 def resizer(img:Image.Image,max_size:int) -> Image.Image:
@@ -82,7 +82,7 @@ def resizer(img:Image.Image,max_size:int) -> Image.Image:
     new_size = int(multiplier*width),int(multiplier*height)
     return img.resize(new_size)
 
-def scrambler(img) -> Image.Image:
+def scrambler(img,key) -> Image.Image:
     """
     Takes an image and scrambles it and returns the scrambled image
     (this function is inverse of unscrambler(img) function)
@@ -91,13 +91,12 @@ def scrambler(img) -> Image.Image:
     """
     w,h = img.size
     data = img_to_list(img)
-    data = utils.split_and_flip(data)
+    seed = utils.get_seed(key[::-1])
+    data = utils.scramble(data,seed)
     newimg = list_to_img(data, height=h, width=w)
-    newimg = newimg.rotate(90, expand=1)
-    data = utils.split_and_flip(img_to_list(newimg))
-    return list_to_img(data, width=h, height=w).rotate(-90,expand=1)
+    return newimg
 
-def unscrambler(img) -> Image.Image:
+def unscrambler(img,key) -> Image.Image:
     """
     Takes an image and performs inverse of scrambling algorithm
     i.e unscrambles the scrambled image and returns it
@@ -106,11 +105,10 @@ def unscrambler(img) -> Image.Image:
     :return: PIL.Image.Image
     """
     w,h = img.size
-    img = img.rotate(90,expand=1)
-    data = utils.split_and_flip(img_to_list(img))
-    newimg = list_to_img(data, w, h).rotate(-90, expand=1)
-    data = utils.split_and_flip(img_to_list(newimg))
-    return list_to_img(data, h, w)
+    data = img_to_list(img)
+    seed = utils.get_seed(key[::-1])
+    data = utils.unscramble(data, seed)
+    return list_to_img(data,h,w)
 
 if __name__ == '__main__':
     from tkinter import filedialog as fd
@@ -134,6 +132,7 @@ if __name__ == '__main__':
     s = utils.timenow()
     # ckey = str(utils.random_KeyGen(254))
     ckey = f"{utils.random_KeyGen(254)}"
+    ckey = "[0]"
     print(ckey)
     img2 = encrypt_image(img,ckey)
     e = utils.timenow()
