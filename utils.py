@@ -114,36 +114,13 @@ def get_seed(array:list):
             return (b+a)/a
         else: # odd , odd
             return (a*b)-((b*a)/a)
-    return float(reduce(seed_func,array))
+    return reduce(seed_func,array) + (sum(array)/len(array))
 
 def is_even(n):
     return n%2==0
 
 def is_odd(n):
     return n%2!=0
-
-def change(key):
-    """
-    Temp function to use for testing.
-    this function changes each value of a given list of integers by +/- 1
-    :param key:
-    :return:
-    """
-    key = json.loads(key)
-    kl = len(key)
-    for i in range(kl):
-        value = key[i]
-        if value == 255:
-            key[i] = 254
-        elif value == 0:
-            key[i] = 1
-        else:
-            r = random.randint(0,10)
-            if r%2==0:
-                key[i] = value + 1
-            else:
-                key[i] = value -1
-    return key
 
 def scramble(data, seed):
     """
@@ -178,7 +155,28 @@ def unscramble(scrambled, seed):
     # return a list of just the data values
     return [x for x, y in sorted_zip]
 
-
+def change(key):
+    """
+    Temp function to use for testing.
+    this function changes each value of a given list of integers by +/- 1
+    :param key:
+    :return:
+    """
+    key = json.loads(key)
+    kl = len(key)
+    for i in range(kl):
+        value = key[i]
+        if value == 255:
+            key[i] = 254
+        elif value == 0:
+            key[i] = 1
+        else:
+            r = random.randint(0,10)
+            if r%2==0:
+                key[i] = value + 1
+            else:
+                key[i] = value -1
+    return key
 if __name__ == '__main__':
     key = random_KeyGen(30)
     print(key)

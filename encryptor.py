@@ -23,6 +23,10 @@ class ImageEncryptor(Tk):
         self._icon = icon
         self.iconbitmap(icon)
         self.key_length = 30
+        self.disp_img_height = 25
+        self.disp_img_width = 85
+        self.horizontal_max_pix = 570
+        self.vertical_max_pix = 450
         self.selimg_temp_path = os.path.join(os.getcwd(), "ImageEncryptor_tempfile_sel_img_preview.png")
         self.resimg_temp_path = os.path.join(os.getcwd(), "ImageEncryptor_tempfile_res_img_preview.png")
         self.title("Image Encryptor - App by Syed Usama")
@@ -50,7 +54,7 @@ class ImageEncryptor(Tk):
 
         self.slabel = Label(master=self.leftFrame,text="Selected Image",font=(dfont,14,'bold'),width=30,height=1,background=BACKGROUND,foreground=WHITE)
         self.slabel.pack()
-        self.simage_label = Label(master=self.leftFrame, text="Selected image will appear here", width=85, height=25, background=SECONDARY_BG, foreground=WHITE)
+        self.simage_label = Label(master=self.leftFrame, text="Selected image will appear here", width=self.disp_img_width, height=self.disp_img_height, background=SECONDARY_BG, foreground=WHITE)
         self.simage_label.pack()
         self.spath = Entry(master=self.leftFrame,background=BACKGROUND,textvariable=self.sp_var,foreground=WHITE,font=(dfont,8),state='readonly',readonlybackground=BACKGROUND,width=90,
                            selectbackground=SELECTION_COLOR,borderwidth=0,justify=CENTER)
@@ -60,7 +64,7 @@ class ImageEncryptor(Tk):
 
         self.rlabel = Label(master=self.rightFrame,text="Resultant Image",font=(dfont,14,'bold'),width=30,height=1,background=BACKGROUND,foreground=WHITE)
         self.rlabel.pack()
-        self.rimage_label = Label(master=self.rightFrame, text="Encrypted/Decrypted image will appear here", width=85, height=25, background=SECONDARY_BG, foreground=WHITE)
+        self.rimage_label = Label(master=self.rightFrame, text="Encrypted/Decrypted image will appear here", width=self.disp_img_width, height=self.disp_img_height, background=SECONDARY_BG, foreground=WHITE)
         self.rimage_label.pack()
         self.rpath = Entry(master=self.rightFrame, background=BACKGROUND,textvariable=self.rp_var, foreground=WHITE,font=(dfont, 8),state='readonly',readonlybackground=BACKGROUND,width=90,
                            selectbackground=SELECTION_COLOR,borderwidth=0,justify=CENTER)
@@ -72,7 +76,7 @@ class ImageEncryptor(Tk):
         self.sel_image_button = Button(master=self.bottomFrame, text="Select image", background=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG)
         self.sel_image_button.grid(row=0, column=0, padx=5, pady=5)
 
-        self.rng_button = Button(master=self.bottomFrame, text="Use randomly generated key (recommended)", background=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG)
+        self.rng_button = Button(master=self.bottomFrame, text="Use randomly generated key", background=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG)
         self.rng_button.grid(row=0,column=1,padx=5,pady=5,sticky=NW)
 
         self.custom_key_btn = Button(master=self.bottomFrame, text="Use custom key", background=SECONDARY_BG, foreground=WHITE, activeforeground=WHITE, activebackground=SECONDARY_BG)
@@ -205,6 +209,8 @@ class ImageEncryptor(Tk):
             self.res_img = None
             self.ekey.configure(state=NORMAL)
             self.ekey.delete(0, END)
+            self.show_hide_btn['text'] = "Hide"
+            self.show_hide()
             if os.path.exists(self.selimg_temp_path):
                 os.remove(self.selimg_temp_path)
             if os.path.exists(self.resimg_temp_path):
@@ -223,12 +229,12 @@ class ImageEncryptor(Tk):
         min_dim = min(w,h)
         ratio = max_dim / min_dim
         if ratio < 1.1 :
-            max_pix = 450
+            max_pix = self.vertical_max_pix
         else:
             if max_dim==h:
-                max_pix = 450
+                max_pix = self.vertical_max_pix
             else:
-                max_pix = 580
+                max_pix = self.horizontal_max_pix
         return imgxor.resizer(img,max_pix)
 
     def open_image(self):
@@ -424,7 +430,7 @@ class ImageEncryptor(Tk):
             if os.path.exists(path):
                 pass
             else:
-                self.sel_img.save(path)
+                self.res_img.save(path)
             display_img(path)
 
     def show_hide(self):
