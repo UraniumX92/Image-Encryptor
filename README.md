@@ -1,6 +1,6 @@
 # Image Encryptor
 
 ***
-v5.1.0
+v6.0.0
 
-An Image encryption / decryption tool built using python, Pillow, and GUI using tkinter
+An Image encryption / decryption tool built using python, Pillow, NumPy and GUI using tkinter.

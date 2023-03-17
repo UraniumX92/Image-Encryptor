@@ -1,5 +1,6 @@
 from datetime import datetime
 from functools import reduce
+import numpy as np
 import random
 import json
 
@@ -95,26 +96,25 @@ def split_and_flip(array:list,proceed=True) -> list:
 
 def get_seed(array:list):
     """
-    Obtains the seed from given list and returns it.
+    Obtains the seed from given array and returns it.
 
-    :param array : a list from which seed is to be obtained
-    :return: float - seed obtained from the key
+    :param array : an array from which seed is to be obtained
+    :return: int - seed obtained from the key
     """
+    max_seed = 4294967296 # This value is 2**32 and maximum value allowed for np.random.seed()
     def seed_func(a,b):
         """
         function to pass in reduce() to get the seed
         """
-        a1 = int(a)
-        b1 = int(b)
-        if is_even(a1) and is_even(b1):
-            return a+b
-        elif is_even(a1) and is_odd(b1):
-            return (2*b)-a
-        elif is_odd(a1) and is_even(b1):
-            return (b+a)/a
+        if is_even(a) and is_even(b):
+            return (2*a)+b
+        elif is_even(a) and is_odd(b):
+            return (2*b)+a
+        elif is_odd(a) and is_even(b):
+            return (b+a)//a
         else: # odd , odd
-            return (a*b)-((b*a)/a)
-    return reduce(seed_func,array) + (sum(array)/len(array))
+            return (a*b)+(abs(b-a)//a)
+    return (reduce(seed_func,array) + (sum(array)//len(array))) % (max_seed)
 
 def is_even(n):
     return n%2==0
@@ -122,7 +122,7 @@ def is_even(n):
 def is_odd(n):
     return n%2!=0
 
-def scramble(data, seed):
+def scramble(data:np.ndarray,seed:int):
     """
     Scrambles the data, using a seed and returns it.
 
@@ -130,14 +130,14 @@ def scramble(data, seed):
     :param seed: seed to be used for rng
     :return: modified data
     """
-    scrambled = data[:]
-    random.seed(seed)
-    random.shuffle(scrambled)
-    # resetting the seed (to avoid problems using random elsewhere)
-    random.seed()
+    scrambled = data.copy()
+    np.random.seed(seed)
+    np.random.shuffle(scrambled)
+    # Resetting the seed to default (to avoid problems using random elsewhere)
+    np.random.seed()
     return scrambled
 
-def unscramble(scrambled, seed):
+def unscramble(scrambled:np.ndarray,seed:int):
     """
     Unscrambles the scrambled data using a seed and returns it.
 
@@ -145,15 +145,10 @@ def unscramble(scrambled, seed):
     :param seed: seed to be used for rng
     :return: modified data
     """
-    index = list(range(len(scrambled)))
-    # Scramble this list using the same seed
-    index_scrambled = scramble(index, seed)
-    # Zip the scrambled data and index together
-    unscrambled = list(zip(scrambled, index_scrambled))
-    # Sort the pairs to unscramble them,
-    sorted_zip = sorted(unscrambled,key=lambda x:x[1])
-    # return a list of just the data values
-    return [x for x, y in sorted_zip]
+    temp = np.arange(len(scrambled))
+    s_temp = scramble(temp, seed)
+    sorted_indices = np.argsort(s_temp)
+    return scrambled[sorted_indices]
 
 def change(key):
     """
@@ -187,20 +182,3 @@ if __name__ == '__main__':
     print(seed2)
     print(seed3)
     exit()
-
-    # data = [x for x in range(215)]
-    # print(data)
-    # shuf = scramble(data, seed)
-    # print(shuf)
-    # unshuf = unscramble(shuf, seed2)
-    # print(unshuf)
-    # print(unshuf==data)
-    # exit()
-    # ------------------------------
-    # arr = [x for x in range(38024)]
-    # old = split_and_flip(arr,0)
-    # new = split_and_flip(arr)
-    # # print(old)
-    # # print(new)
-    # reset = split_and_flip(new)
-    # print(sorted(new) == reset)
